@@ -28,25 +28,24 @@ function getRouteData(req: Request) {
 	return {server: server, appName: appName, controller: controller, method: method};
 }
 
-async function getControllerPath(appName: string, controller: string) {
+async function getResource(appName: string, controller: string) {
 	let path = `${appName}/resources/${controller}.ts`;
 	const controllerExist = await exists(path);
 	if (!controllerExist) {
 		path = `common/resources/${controller}.ts`;
 	}
-	return path;
+	return await import(`./${path}`);
 }
 
 
 async function route(req: Request) {
 	try {
 		const routeData = getRouteData(req);
-		const path = await getControllerPath(routeData.appName, routeData.controller);
-		const resource = await import(`./${path}`);
+		const resource = await getResource(routeData.appName, routeData.controller);
 		const obj = new resource.default(req, false);
 		return eval(`obj.${routeData.method}()`);
-	} catch (error) {
-		console.log(error);
+	} catch (e) {
+		console.log(e);
 		return false;
 	}
 }
@@ -54,8 +53,7 @@ async function route(req: Request) {
 async function wsRoute(req: Request, socket: WebSocket) {
 	try {
 		const routeData = getRouteData(req);
-		const path = await getControllerPath(routeData.appName, routeData.controller);
-		const resource = await import(`./${path}`);
+		const resource = await getResource(routeData.appName, routeData.controller);
 
 		socket.onopen = () => {console.log('WebSocket connection opened')};
 		socket.onmessage = (socketRequest) => {
