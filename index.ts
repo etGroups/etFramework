@@ -55,23 +55,16 @@ async function wsRoute(req: Request, socket: WebSocket) {
 	try {
 		const routeData = getRouteData(req);
 		const path = await getControllerPath(routeData.appName, routeData.controller);
-		socket.onopen = () => {
-			console.log('WebSocket connection opened'); //TODO autoryzacja sprawdza poprawnosc danych JWT?
-		};
-
 		const resource = await import(`./${path}`);
 
+		socket.onopen = () => {console.log('WebSocket connection opened')};
 		socket.onmessage = (socketRequest) => {
 			const data = isJson(socketRequest.data);
 			if (!data || !data.method) {
 				socket.send("Data must be a valid JSON");
 				return false;
 			}
-			const socketData = {
-				socket: socket,
-				socketRequest: socketRequest
-			}
-			const obj = new resource.default(req, socketData);
+			const obj = new resource.default(req, {socket: socket, socketRequest: socketRequest});
 			return eval(`obj.${data.method}()`);
 		};
 		socket.onclose = () => console.log("WebSocket has been closed.");
