@@ -10,31 +10,41 @@ function isJson(str: string) {
 	}
 }
 
+function getRouteData(req: Request) {
+	const server = urlParse(req.url);
+	const appName = server.hostname.replace(/(\.lh|\.pl|api\.)/g, '');
+	const segments = server.pathname.substring(1).split('/');
+	let method = segments.pop();
+	let controller = segments.join('/') ?? '';
+
+	if (!controller) {
+		controller = method ? method : 'index';
+		method = 'index';
+	}
+	if (!method) {
+		method = 'index';
+	}
+
+	return {server: server, appName: appName, controller: controller, method: method};
+}
+
+async function getControllerPath(appName: string, controller: string) {
+	let path = `${appName}/resources/${controller}.ts`;
+	const controllerExist = await exists(path);
+	if (!controllerExist) {
+		path = `common/resources/${controller}.ts`;
+	}
+	return path;
+}
+
+
 async function route(req: Request) {
 	try {
-		const server = urlParse(req.url);
-		const appName = server.hostname.replace(/(\.lh|\.pl|api\.)/g, '');
-		const segments = server.pathname.substring(1).split('/');
-		let method = segments.pop();
-		let controller = segments.join('/') ?? '';
-
-		if (!controller) {
-			controller = method ? method : 'index';
-			method = 'index';
-		}
-		if (!method) {
-			method = 'index';
-		}
-
-		let path = `${appName}/resources/${controller}.ts`;
-		const controllerExist = await exists(path);
-		if (!controllerExist) {
-			path = `common/resources/${controller}.ts`;
-		}
-
+		const routeData = getRouteData(req);
+		const path = await getControllerPath(routeData.appName, routeData.controller);
 		const resource = await import(`./${path}`);
 		const obj = new resource.default(req, false);
-		return eval(`obj.${method}()`);
+		return eval(`obj.${routeData.method}()`);
 	} catch (error) {
 		console.log(error);
 		return false;
@@ -43,19 +53,8 @@ async function route(req: Request) {
 
 async function wsRoute(req: Request, socket: WebSocket) {
 	try {
-		const server = urlParse(req.url);
-		const appName = server.hostname.replace(/(\.lh|\.pl|api\.)/g, '');
-		let controller = server.pathname.substring(1);
-		if (!controller) {
-			controller = 'index';
-		}
-
-		let path = `${appName}/resources/${controller}.ts`;
-		const controllerExist = await exists(path);
-		if (!controllerExist) {
-			path = `common/resources/${controller}.ts`;
-		}
-
+		const routeData = getRouteData(req);
+		const path = await getControllerPath(routeData.appName, routeData.controller);
 		socket.onopen = () => {
 			console.log('WebSocket connection opened'); //TODO autoryzacja sprawdza poprawnosc danych JWT?
 		};
