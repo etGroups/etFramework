@@ -13,10 +13,8 @@ function isJson(str: string) {
 async function route(req: Request) {
 	try {
 		const server = urlParse(req.url);
-		let appName = server.hostname.replace('api.', '')
-		appName = appName.replace(/(\.lh|\.pl)/g, '');
-		const pathname = server.pathname.substring(1);
-		const segments = pathname.split('/');
+		const appName = server.hostname.replace(/(\.lh|\.pl|api\.)/g, '');
+		const segments = server.pathname.substring(1).split('/');
 		let method = segments.pop();
 		let controller = segments.join('/') ?? '';
 
@@ -46,8 +44,7 @@ async function route(req: Request) {
 async function wsRoute(req: Request, socket: WebSocket) {
 	try {
 		const server = urlParse(req.url);
-		let appName = server.hostname.replace('api.', '')
-		appName = appName.replace(/(\.lh|\.pl)/g, '');
+		const appName = server.hostname.replace(/(\.lh|\.pl|api\.)/g, '');
 		let controller = server.pathname.substring(1);
 		if (!controller) {
 			controller = 'index';
