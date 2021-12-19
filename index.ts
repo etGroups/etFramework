@@ -21,9 +21,7 @@ function getRouteData(req: Request) {
 		controller = method ? method : 'index';
 		method = 'index';
 	}
-	if (!method) {
-		method = 'index';
-	}
+	method  = (method) ? method.toLowerCase() : 'index';
 
 	return {server: server, appName: appName, controller: controller, method: method};
 }
