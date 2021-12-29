@@ -1,11 +1,12 @@
 class BaseResource {
 	protected socket: WebSocket | false;
 	protected req: Request;
-	protected socketRequest: any;
+	protected socketRequest: MessageEvent | false;
 
 	constructor(req: Request, socket: any = false) {
 		this.req = req;
 		this.socket = false;
+		this.socketRequest = false;
 		if (socket) {
 			this.socket = socket.socket;
 			this.socketRequest = socket.socketRequest;

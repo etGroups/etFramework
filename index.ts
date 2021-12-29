@@ -21,16 +21,16 @@ function getRouteData(req: Request) {
 		controller = method ? method : 'index';
 		method = 'index';
 	}
-	method  = (method) ? method.toLowerCase() : 'index';
+	method = (method) ? method.toLowerCase() : 'index';
 
 	return {server: server, appName: appName, controller: controller, method: method};
 }
 
-async function getResource(appName: string, controller: string) {
-	let path = `${appName}/resources/${controller}.ts`;
+async function getResource(appName: string, controller: string, isWS: boolean) {
+	let path = isWS ? `${appName}/resources/ws/${controller}.ts` : `${appName}/resources/http/${controller}.ts`;
 	const controllerExist = await exists(path);
 	if (!controllerExist) {
-		path = `common/resources/${controller}.ts`;
+		path = isWS ? `common/resources/ws/${controller}.ts` : `common/resources/http/${controller}.ts`;
 	}
 	return await import(`./${path}`);
 }
@@ -39,7 +39,7 @@ async function getResource(appName: string, controller: string) {
 async function route(req: Request) {
 	try {
 		const routeData = getRouteData(req);
-		const resource = await getResource(routeData.appName, routeData.controller);
+		const resource = await getResource(routeData.appName, routeData.controller, false);
 		const obj = new resource.default(req, false);
 		return eval(`obj.${routeData.method}()`);
 	} catch (e) {
@@ -51,9 +51,11 @@ async function route(req: Request) {
 async function wsRoute(req: Request, socket: WebSocket) {
 	try {
 		const routeData = getRouteData(req);
-		const resource = await getResource(routeData.appName, routeData.controller);
+		const resource = await getResource(routeData.appName, routeData.controller, true);
 
-		socket.onopen = () => {console.log('WebSocket connection opened')};
+		socket.onopen = () => {
+			console.log('WebSocket connection opened')
+		};
 		socket.onmessage = (socketRequest) => {
 			const data = isJson(socketRequest.data);
 			if (!data || !data.method) {

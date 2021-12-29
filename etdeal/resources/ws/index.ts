@@ -8,10 +8,7 @@ class IndexResource extends BaseResource {
 
 	async index(): Promise<any> {
 		const body = await this.getBody();
-		console.log(body);
-		return this.respond('Hello deno', {
-			status: 200,
-		});
+		return this.respond('Hello deno');
 	}
 }
 
