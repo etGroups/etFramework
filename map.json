@@ -3,6 +3,8 @@
 		"BaseResource": "./common/resources/baseResource.ts",
 		"server": "https://deno.land/std@0.118.0/http/server.ts",
 		"urlParse": "https://deno.land/x/url_parse/mod.ts",
+		"jose": "https://deno.land/x/jose@v4.3.7/index.ts",
+		"base64": "https://deno.land/std/encoding/base64.ts",
 		"fs": "https://deno.land/std/fs/mod.ts"
 	}
 }
